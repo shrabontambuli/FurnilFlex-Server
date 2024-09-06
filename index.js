@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -33,12 +33,17 @@ async function run() {
 
         const userCollection = client.db('FurnilFlex').collection('users');
         const productCollection = client.db('FurnilFlex').collection('products');
-        const selectsCollection = client.db('FurnilFlex').collection('selects');
+        const cartCollection = client.db('FurnilFlex').collection('carts');
 
 
         // get api //
         app.get('/products', async (req, res) => {
             const product = await productCollection.find().toArray();
+            res.send(product);
+        });
+
+        app.get('/cart', async (req, res) => {
+            const product = await cartCollection.find().toArray();
             res.send(product);
         });
 
@@ -54,11 +59,21 @@ async function run() {
             res.send(result);
         });
 
-        app.post('/selects', async (req, res) => {
+        app.post('/cart', async (req, res) => {
             const data = req.body;
-            const result = await selectsCollection.insertOne(data);
+            const result = await cartCollection.insertOne(data);
             res.send(result);
-        })
+        });
+
+        // delete api //
+        app.delete('/cart/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await cartCollection.deleteOne(query);
+            res.send(result);
+        });
+
+
 
 
 
