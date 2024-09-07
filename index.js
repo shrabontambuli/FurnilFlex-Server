@@ -43,9 +43,13 @@ async function run() {
         });
 
         app.get('/cart', async (req, res) => {
-            const product = await cartCollection.find().toArray();
+            const email = req.query.email;
+            const query = { email: email };
+            const product = await cartCollection.find(query).toArray();
             res.send(product);
         });
+
+
 
         // post api //
         app.post('/users', async (req, res) => {
@@ -61,9 +65,32 @@ async function run() {
 
         app.post('/cart', async (req, res) => {
             const data = req.body;
+            const alreadyAdded = await cartCollection.findOne({ email: data.email, productId: data.productId });
+            if (alreadyAdded) {
+                return res.send({success: false});
+            }
             const result = await cartCollection.insertOne(data);
-            res.send(result);
+            const cart = await cartCollection.findOne({ _id: new ObjectId(result.insertedId)});
+            res.send(cart);
         });
+
+
+        // app.post('/cart', async (req, res) => {
+        //     const data = req.body;
+        //     const alreadyAdded = await cartCollection.findOne({ email: data.email, productId: data.productId });
+        //     // let result;
+        //     if (alreadyAdded) {
+        //         return res.send({success: false});
+        //         // result = await cartCollection.updateOne({ _id: new ObjectId(alreadyAdded._id) },{ $inc: { quantity: +1 },});
+        //     }
+        //     // else {
+        //     //     result = await cartCollection.insertOne(data);
+        //     // }
+        //     const result = await cartCollection.insertOne(data);
+        //     // const id = result?.insertedId || alreadyAdded._id;
+        //     const cart = await cartCollection.findOne({ _id: new ObjectId(result.insertedId)});
+        //     res.send(cart);
+        // });
 
         // delete api //
         app.delete('/cart/:id', async (req, res) => {
